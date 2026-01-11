@@ -5,7 +5,7 @@ use PDOException;
 use Exception;
 use PDO;
 
-class Database {
+class DataBase {
     private static $instance = null;
     private $pdo;
 
@@ -21,10 +21,10 @@ class Database {
 
     public static function getInstance($dsn = null, $username = null, $password = null) {
         if (self::$instance === null) {
-            $dsn = $dsn ?? 'mysql:host=localhost;dbname=your_database_name';
-            $username = $username ?? 'your_username';
-            $password = $password ?? 'your_password';
-            self::$instance = new Database($dsn, $username, $password);
+            $dsn = $dsn ?? 'mysql:host=localhost;dbname=Vesta';
+            $username = $username ?? 'root';
+            $password = $password ?? '';
+            self::$instance = new DataBase($dsn, $username, $password);
         }
         return self::$instance;
     }

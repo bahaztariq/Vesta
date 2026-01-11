@@ -31,11 +31,11 @@ require_once dirname(__DIR__) . '/config/DataBase.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vesta - Vacation Rentals & Short-Term Stays</title>
-    <?php include 'components/head_resources.php'; ?>
+    <?php include 'partials/head_resources.php'; ?>
 </head>
 <body class="font-poppins bg-gray-50">
     <!-- Navigation -->
-    <?php include 'components/navbar.php'; ?>
+    <?php include 'partials/navbar.php'; ?>
 
     <!-- Hero Section -->
     <section class="bg-[url('https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2049&auto=format&fit=crop')] bg-cover bg-center min-h-[600px] relative flex flex-col justify-center items-center text-white pb-20">

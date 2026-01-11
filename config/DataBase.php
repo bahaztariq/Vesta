@@ -7,7 +7,7 @@ require_once __DIR__ . '/../Entities/DataBase.php'; // Manual require to fix aut
 use App\Entities\DataBase;
 
 
-$db = new DataBase("localhost","Vesta","root","");
-$pdo = $db->connect();
+$db = DataBase::getInstance("mysql:host=localhost;dbname=Vesta;charset=utf8", "root", "");
+$pdo = $db->getConnection();
 $connect = $pdo;
 
