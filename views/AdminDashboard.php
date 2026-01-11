@@ -34,12 +34,12 @@ $reclamations = $reclamationRepo->findAll();
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>Admin Dashboard</title>
-     <?php include 'components/head_resources.php'; ?>
+     <?php include 'partials/head_resources.php'; ?>
      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans flex flex-col h-screen overflow-hidden">
     <!-- Global Navbar -->
-    <?php include 'components/navbar.php'; ?>
+    <?php include 'partials/navbar.php'; ?>
     
     <div class="flex flex-1 overflow-hidden">
         <!-- Sidebar -->

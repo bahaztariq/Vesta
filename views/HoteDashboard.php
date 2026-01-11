@@ -66,7 +66,7 @@ $myListings = $repo->findByHostId(1);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Dashboard - Vesta</title>
-    <?php include 'components/head_resources.php'; ?>
+    <?php include 'partials/head_resources.php'; ?>
     <script>
         tailwind.config = {
             theme: {
@@ -129,13 +129,17 @@ $myListings = $repo->findByHostId(1);
         <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50">
             
             <?php if ($message): ?>
-            <div class=" mb-6 p-4 rounded-lg flex items-center justify-between <?php echo $messageType === 'success' ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'; ?>">
-                <div class="flex items-center">
-                    <i class="fas <?php echo $messageType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> mr-2"></i>
-                    <span><?php echo $message; ?></span>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-sm opacity-75 hover:opacity-100"><i class="fas fa-times"></i></button>
-            </div>
+            <script>
+                Toastify({
+                    text: "<?php echo $message; ?>",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top", // `top` or `bottom`
+                    position: "right", // `left`, `center` or `right`
+                    backgroundColor: "<?php echo $messageType === 'success' ? '#22c55e' : '#ef4444'; ?>",
+                    stopOnFocus: true, // Prevents dismissing of toast on hover
+                }).showToast();
+            </script>
             <?php endif; ?>
 
             <!-- Dashboard / Listings Section -->

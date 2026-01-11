@@ -33,12 +33,12 @@ $activeTab = isset($_GET['tab']) ? $_GET['tab'] : 'profile';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - Vesta</title>
-    <?php include 'components/head_resources.php'; ?>
+    <?php include 'partials/head_resources.php'; ?>
 </head>
 <body class="bg-gray-50 font-sans">
 
     <!-- Navbar -->
-    <?php include 'components/navbar.php'; ?>
+    <?php include 'partials/navbar.php'; ?>
 
     <div class="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
         

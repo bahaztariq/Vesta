@@ -3,6 +3,7 @@ require_once dirname(__DIR__) . '/config/DataBase.php';
 require_once dirname(__DIR__) . '/repositories/LogementRepository.php';
 require_once dirname(__DIR__) . '/repositories/UserRepository.php';
 require_once dirname(__DIR__) . '/repositories/ReviewRepository.php';
+require_once dirname(__DIR__) . '/repositories/ReservationRepository.php';
 require_once dirname(__DIR__) . '/services/LogementService.php';
 require_once dirname(__DIR__) . '/services/UserService.php';
 require_once dirname(__DIR__) . '/services/ReviewService.php';
@@ -10,6 +11,7 @@ require_once dirname(__DIR__) . '/services/ReviewService.php';
 use App\Repositories\LogementRepository;
 use App\Repositories\UserRepository;
 use App\Repositories\ReviewRepository;
+use App\Repositories\ReservationRepository;
 use App\Services\LogementService;
 use App\Services\UserService;
 use App\Services\ReviewService;
@@ -17,6 +19,7 @@ use App\Services\ReviewService;
 $logementRepo = new LogementRepository($pdo);
 $userRepo = new UserRepository($pdo);
 $reviewRepo = new ReviewRepository($pdo);
+$reservationRepo = new ReservationRepository($pdo);
 
 $logementService = new LogementService($logementRepo);
 $userService = new UserService($userRepo);
@@ -42,27 +45,34 @@ $hostImage = "https://ui-avatars.com/api/?name=" . urlencode($hostName) . "&back
 $reviews = $reviewService->getReviewsByLogementId($logement->getId());
 $ratingSum = 0;
 $reviewCount = count($reviews);
-foreach($reviews as $r) {
+foreach ($reviews as $r) {
     $ratingSum += $r->getRating();
 }
 $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
-               
+
+$hasReserved = false;
+if (isset($_SESSION['user_id'])) {
+    $hasReserved = $reservationRepo->hasReservation($_SESSION['user_id'], $logement->getId());
+}
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($logement->getName()) ?> - Vesta</title>
-    <?php include 'components/head_resources.php'; ?>
+    <?php include 'partials/head_resources.php'; ?>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" defer></script>
 </head>
+
 <body class="bg-white text-gray-800 font-sans">
 
     <!-- Navbar -->
-    <?php include 'components/navbar.php'; ?>
+    <?php include 'partials/navbar.php'; ?>
 
     <main class="max-w-[1120px] mx-auto px-4  pb-10">
 
@@ -115,10 +125,10 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
 
         <!-- Content Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-            
+
             <!-- Left Column: Details -->
             <div class="md:col-span-2">
-                
+
                 <div class="flex justify-between items-center border-b border-gray-200 pb-6 mb-6">
                     <div>
                         <h2 class="text-2xl font-semibold">Hosted by <?= htmlspecialchars($hostName) ?></h2>
@@ -167,40 +177,113 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                 </div>
 
                 <!-- Reviews Section -->
-                
+
                 <div class="border-b border-gray-200 pb-6 mb-6">
                     <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2">
-                        <i class="fas fa-star text-base"></i> 
+                        <i class="fas fa-star text-base"></i>
                         <?= $avgRating > 0 ? $avgRating : 'New' ?> · <?= $reviewCount ?> reviews
                     </h2>
-                    
+
                     <?php if ($reviewCount > 0): ?>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
-                        <?php foreach($reviews as $review): 
-                            // Fetch reviewer info using Service
-                             $reviewer = $userService->getUserById($review->getUserId());
-                             $reviewerName = $reviewer ? $reviewer->getFullName() : 'Guest';
-                             $reviewerImg = "https://ui-avatars.com/api/?name=" . urlencode($reviewerName) . "&background=random";
-                             // Date is missing in Entity but seemingly used in Repo query. 
-                             // We'll use a placeholder or current date if not available, OR try to access if property existed dynamically.
-                             // Since Entity definition didn't have date, we can't access it via getter. assuming immediate display.
-                        ?>
-                        <div>
-                            <div class="flex items-center gap-3 mb-3">
-                                <img src="<?= $reviewerImg ?>" class="w-10 h-10 rounded-full object-cover">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+                            <?php foreach ($reviews as $review):
+                                // Fetch reviewer info using Service
+                                $reviewer = $userService->getUserById($review->getUserId());
+                                $reviewerName = $reviewer ? $reviewer->getFullName() : 'Guest';
+                                $reviewerImg = "https://ui-avatars.com/api/?name=" . urlencode($reviewerName) . "&background=random";
+                                // Date is missing in Entity but seemingly used in Repo query. 
+                                // We'll use a placeholder or current date if not available, OR try to access if property existed dynamically.
+                                // Since Entity definition didn't have date, we can't access it via getter. assuming immediate display.
+                            ?>
                                 <div>
-                                    <h3 class="font-semibold text-gray-800"><?= htmlspecialchars($reviewerName) ?></h3>
-                                    <div class="text-gray-500 text-sm">Recent Stay</div> 
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <img src="<?= $reviewerImg ?>" class="w-10 h-10 rounded-full object-cover">
+                                        <div>
+                                            <h3 class="font-semibold text-gray-800"><?= htmlspecialchars($reviewerName) ?></h3>
+                                            <div class="text-gray-500 text-sm">Recent Stay</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-gray-700 leading-relaxed">
+                                        <?= htmlspecialchars($review->getComment()) ?>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="text-gray-700 leading-relaxed">
-                                <?= htmlspecialchars($review->getComment()) ?>
-                            </div>
+                            <?php endforeach; ?>
                         </div>
-                        <?php endforeach; ?>
-                    </div>
                     <?php else: ?>
                         <p class="text-gray-500">No reviews yet.</p>
+                    <?php endif; ?>
+
+                    <?php if ($hasReserved): ?>
+                        <div class="mt-8 border-t border-gray-200 pt-8">
+                            <h3 class="text-xl font-semibold mb-4">Leave a Review</h3>
+                            <form action="../actions/add_review.php" method="POST" class="bg-gray-50 p-6 rounded-xl">
+                                <input type="hidden" name="logement_id" value="<?= $logement->getId() ?>">
+
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 font-medium mb-2">Rating</label>
+                                    <div class="flex gap-1 text-2xl text-gray-300" id="star-rating-container">
+                                        <?php for ($i = 1; $i <= 5; $i++): ?>
+                                            <input type="radio" name="rating" id="star<?= $i ?>" value="<?= $i ?>" class="hidden" required>
+                                            <label for="star<?= $i ?>" class="cursor-pointer transition-colors star-label" data-value="<?= $i ?>">
+                                                <i class="fas fa-star"></i>
+                                            </label>
+                                        <?php endfor; ?>
+                                    </div>
+                                </div>
+
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const stars = document.querySelectorAll('.star-label');
+                                        const inputs = document.querySelectorAll('input[name="rating"]');
+
+                                        function updateStars(rating) {
+                                            stars.forEach(star => {
+                                                const starVal = parseInt(star.dataset.value);
+                                                const icon = star.querySelector('i');
+                                                if (starVal <= rating) {
+                                                    icon.classList.remove('text-gray-300');
+                                                    icon.classList.add('text-orange-500');
+                                                } else {
+                                                    icon.classList.add('text-gray-300');
+                                                    icon.classList.remove('text-orange-500');
+                                                }
+                                            });
+                                        }
+
+                                        inputs.forEach(input => {
+                                            input.addEventListener('change', function() {
+                                                updateStars(this.value);
+                                            });
+                                        });
+
+                                        // Optional: Hover effect
+                                        const container = document.getElementById('star-rating-container');
+                                        if (container) {
+                                            container.addEventListener('mouseleave', function() {
+                                                const checked = document.querySelector('input[name="rating"]:checked');
+                                                const val = checked ? checked.value : 0;
+                                                updateStars(val);
+                                            });
+                                        }
+
+                                        stars.forEach(star => {
+                                            star.addEventListener('mouseenter', function() {
+                                                updateStars(this.dataset.value);
+                                            });
+                                        });
+                                    });
+                                </script>
+
+                                <div class="mb-4">
+                                    <label class="block text-gray-700 font-medium mb-2">Comment</label>
+                                    <textarea name="comment" rows="4" class="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-orange-500 outline-none" required placeholder="Share your experience..."></textarea>
+                                </div>
+
+                                <button type="submit" class="bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-orange-700 transition">
+                                    Submit Review
+                                </button>
+                            </form>
+                        </div>
                     <?php endif; ?>
                 </div>
 
@@ -222,7 +305,7 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                     <form action="../actions/book.php" method="POST" id="bookingForm">
                         <input type="hidden" name="logement_id" value="<?= $logement->getId() ?>">
                         <input type="hidden" name="price_per_night" id="price_per_night" value="<?= $logement->getPrice() ?>">
-                        
+
                         <div class="border border-gray-400 rounded-lg overflow-hidden mb-4">
                             <div class="flex border-b border-gray-400">
                                 <div class="flex-1 p-2 border-r border-gray-400">
@@ -237,8 +320,8 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                             <div class="p-2">
                                 <label class="block text-xs font-bold uppercase text-gray-700">Guests</label>
                                 <select name="guests" class="w-full text-sm outline-none bg-white cursor-pointer">
-                                    <?php for($i=1; $i<=$logement->getGuestNum(); $i++): ?>
-                                    <option value="<?= $i ?>"><?= $i ?> guest<?= $i > 1 ? 's' : '' ?></option>
+                                    <?php for ($i = 1; $i <= $logement->getGuestNum(); $i++): ?>
+                                        <option value="<?= $i ?>"><?= $i ?> guest<?= $i > 1 ? 's' : '' ?></option>
                                     <?php endfor; ?>
                                 </select>
                             </div>
@@ -248,7 +331,7 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                             Reserve
                         </button>
                     </form>
-                    
+
                     <p class="text-center text-gray-500 text-sm mt-3 mb-4">You won't be charged yet</p>
 
                     <div id="price-breakdown" class="hidden space-y-3 pt-4 border-t border-gray-100">
@@ -289,7 +372,7 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                         <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-linkedin-in text-xl"></i></a>
                     </div>
                 </div>
-                
+
                 <div>
                     <h4 class="text-lg font-semibold mb-6">For Travelers</h4>
                     <ul class="space-y-3">
@@ -300,7 +383,7 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                         <li><a href="#" class="text-gray-400 hover:text-white">Gift Cards</a></li>
                     </ul>
                 </div>
-                
+
                 <div>
                     <h4 class="text-lg font-semibold mb-6">For Hosts</h4>
                     <ul class="space-y-3">
@@ -311,7 +394,7 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                         <li><a href="#" class="text-gray-400 hover:text-white">Hosting FAQs</a></li>
                     </ul>
                 </div>
-                
+
                 <div>
                     <h4 class="text-lg font-semibold mb-6">Company</h4>
                     <ul class="space-y-3">
@@ -323,7 +406,7 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
                     </ul>
                 </div>
             </div>
-            
+
             <div class=" mt-10 pt-8 text-center text-black-400">
                 <p>&copy; 2026 Vesta. All rights reserved.</p>
             </div>
@@ -337,7 +420,7 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
         const nightCalc = document.getElementById('night-calc');
         const basePriceEl = document.getElementById('base-price');
         const totalPriceEl = document.getElementById('total-price');
-        
+
         const cleaningFee = 15;
         const serviceFee = 25;
 
@@ -347,8 +430,8 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
 
             if (start && end && end > start) {
                 const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
                 const baseTotal = diffDays * pricePerNight;
                 const grandTotal = baseTotal + cleaningFee + serviceFee;
 
@@ -363,14 +446,15 @@ $avgRating = $reviewCount > 0 ? round($ratingSum / $reviewCount, 2) : 0;
         }
 
         startDateInput.addEventListener('change', function() {
-            endDateInput.min = startDateInput.value; 
+            endDateInput.min = startDateInput.value;
             calculatePrice();
         });
-        
+
         endDateInput.addEventListener('change', calculatePrice);
-        
+
         const logementDates = <?php echo json_encode($logementDates); ?>;
         console.log(logementDates);
     </script>
 </body>
+
 </html>

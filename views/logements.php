@@ -42,7 +42,7 @@ if (isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vesta - Browse Homes</title>
-    <?php include 'components/head_resources.php'; ?>
+    <?php include 'partials/head_resources.php'; ?>
     <!-- Reuse existing CSS if available -->
     <style>
         body { font-family: 'Poppins', sans-serif; }
@@ -50,7 +50,7 @@ if (isset($_SESSION['user_id'])) {
 </head>
 <body class="bg-gray-50">
     <!-- Navbar -->
-    <?php include 'components/navbar.php'; ?>
+    <?php include 'partials/navbar.php'; ?>
 
     <div class="container mx-auto px-4 py-8">
         <div class="flex flex-col md:flex-row gap-8">

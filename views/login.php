@@ -51,6 +51,8 @@ if (isset($_POST['submit'])) {
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@flaticon/flaticon-uicons@3.3.1/css/all/all.min.css">
     <link rel="icon" href="imgs/icon.png">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -74,9 +76,20 @@ if (isset($_POST['submit'])) {
                 </div>
 
                 <?php if (!empty($message)): ?>
-                    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r" role="alert">
-                        <p><?php echo htmlspecialchars($message); ?></p>
-                    </div>
+                    <script>
+                        // Keep this for fallback or server-rendered initial state if needed
+                        Toastify({
+                            text: "<?php echo htmlspecialchars($message); ?>",
+                            duration: 3000,
+                            close: true,
+                            gravity: "top", // `top` or `bottom`
+                            position: "right", // `left`, `center` or `right`
+                            stopOnFocus: true, // Prevents dismissing of toast on hover
+                            style: {
+                                background: "#ff2335ff",
+                            },
+                        }).showToast();
+                    </script>
                 <?php endif; ?>
 
                 <form action="login.php" method="POST" class="space-y-5">

@@ -17,7 +17,7 @@ class ReservationRepository implements ReservationRepositoryInterface
 
     public function save(int $userId, int $logementId, string $startDate, string $endDate, int $price): bool
     {
-        
+
         $sql = "INSERT INTO reservations (userID, logmentID, startDate, endDate, price) VALUES (:userId, :logementId, :startDate, :endDate, :price)";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
@@ -45,7 +45,7 @@ class ReservationRepository implements ReservationRepositoryInterface
 
         $reservations = [];
         foreach ($rows as $row) {
-            $reservations[] = $this->mapToEntity($row); 
+            $reservations[] = $this->mapToEntity($row);
         }
         return $reservations;
     }
@@ -55,11 +55,21 @@ class ReservationRepository implements ReservationRepositoryInterface
         return new Reservation(
             (int)$row['id'],
             (int)$row['userID'],
-            (int)$row['logmentID'], 
+            (int)$row['logmentID'],
             $row['startDate'],
             $row['endDate'],
             (int)$row['price']
         );
     }
-   
+
+    public function hasReservation(int $userId, int $logementId): bool
+    {
+        $sql = "SELECT COUNT(*) FROM reservations WHERE userID = :userId AND logmentID = :logementId";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':userId' => $userId,
+            ':logementId' => $logementId
+        ]);
+        return $stmt->fetchColumn() > 0;
+    }
 }
