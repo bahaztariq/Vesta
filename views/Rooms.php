@@ -28,6 +28,7 @@ $reviewService = new ReviewService($reviewRepo);
 $logementId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $logement = $logementService->getLogementById($logementId);
 $logementDates = $logementService->getLogementsDates($logementId);
+session_start();
 
 
 if (!$logement) {
@@ -191,9 +192,7 @@ if (isset($_SESSION['user_id'])) {
                                 $reviewer = $userService->getUserById($review->getUserId());
                                 $reviewerName = $reviewer ? $reviewer->getFullName() : 'Guest';
                                 $reviewerImg = "https://ui-avatars.com/api/?name=" . urlencode($reviewerName) . "&background=random";
-                                // Date is missing in Entity but seemingly used in Repo query. 
-                                // We'll use a placeholder or current date if not available, OR try to access if property existed dynamically.
-                                // Since Entity definition didn't have date, we can't access it via getter. assuming immediate display.
+                                
                             ?>
                                 <div>
                                     <div class="flex items-center gap-3 mb-3">
@@ -283,6 +282,25 @@ if (isset($_SESSION['user_id'])) {
                                     Submit Review
                                 </button>
                             </form>
+
+                            <!-- Reclamation Section -->
+                            <div class="mt-4 text-right">
+                                <button onclick="document.getElementById('reclamation-form').classList.toggle('hidden')" class="text-sm text-gray-500 hover:text-red-500 underline">
+                                    Report an issue with this stay
+                                </button>
+
+                                <form id="reclamation-form" action="../actions/add_reclamation.php" method="POST" class="hidden mt-4 bg-red-50 p-6 rounded-xl text-left border border-red-100">
+                                    <h4 class="text-lg font-semibold text-red-700 mb-2">Report an Issue</h4>
+                                    <input type="hidden" name="logement_id" value="<?= $logement->getId() ?>">
+                                    <div class="mb-4">
+                                        <label class="block text-gray-700 font-medium mb-2">Describe the issue</label>
+                                        <textarea name="message" rows="3" class="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-red-500 outline-none" required placeholder="What went wrong?"></textarea>
+                                    </div>
+                                    <button type="submit" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 transition">
+                                        Submit Report
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>

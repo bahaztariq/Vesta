@@ -64,7 +64,7 @@ class ReservationRepository implements ReservationRepositoryInterface
 
     public function hasReservation(int $userId, int $logementId): bool
     {
-        $sql = "SELECT COUNT(*) FROM reservations WHERE userID = :userId AND logmentID = :logementId";
+        $sql = "SELECT COUNT(*) FROM reservations WHERE userID = :userId AND logementID = :logementId";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             ':userId' => $userId,
